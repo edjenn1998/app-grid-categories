@@ -1,0 +1,12 @@
+{
+  "name": "app-grid-categories",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check extension.js && node --check prefs.js && node --check categories.js && glib-compile-schemas --strict --dry-run schemas",
+    "build": "python3 tools/build.py",
+    "test:package": "python3 tests/packaging_test.py"
+  }
+}

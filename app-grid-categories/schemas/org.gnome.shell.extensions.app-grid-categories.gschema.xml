@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<schemalist>
+  <schema id="org.gnome.shell.extensions.app-grid-categories" path="/org/gnome/shell/extensions/app-grid-categories/">
+    <key name="categories" type="s">
+      <default>''</default>
+      <summary>Versioned JSON category configuration</summary>
+      <description>Empty means factory defaults. Each category has an ID, name, metadata matches, explicit inclusions and exclusions, and enabled state.</description>
+    </key>
+    <key name="sort-order" type="s">
+      <choices>
+        <choice value="alphabetical"/>
+        <choice value="frequent"/>
+        <choice value="recent"/>
+      </choices>
+      <default>'alphabetical'</default>
+      <summary>App order within category pages</summary>
+      <description>Alphabetical, most frequently used according to GNOME, or most recently discovered installed apps first.</description>
+    </key>
+    <key name="app-first-seen" type="s">
+      <default>''</default>
+      <summary>Installed app discovery timestamps</summary>
+      <description>JSON map of desktop app IDs to first-seen timestamps. Existing apps start with an unknown-date baseline of zero.</description>
+    </key>
+    <key name="tab-opacity" type="i">
+      <range min="0" max="100"/>
+      <default>100</default>
+      <summary>Category background and border opacity</summary>
+      <description>Opacity percentage for the category ovals. Zero is transparent, 100 is opaque. Labels and keyboard focus indicators remain visible.</description>
+    </key>
+  </schema>
+</schemalist>

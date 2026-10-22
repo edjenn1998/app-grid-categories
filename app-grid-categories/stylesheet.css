@@ -1,0 +1,10 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+.agc-bar { spacing: 12px; padding: 8px 24px 12px; }
+.agc-tabs { spacing: 8px; padding-bottom: 6px; }
+.agc-tab { border-radius: 18px; border: 1px solid transparent; padding: 8px 18px; color: white; }
+.agc-tab:focus { box-shadow: inset 0 0 0 2px #99c1f1; }
+.agc-pane { padding: 12px 24px; spacing: 16px; }
+.agc-heading { font-size: 16pt; font-weight: bold; padding: 4px 12px; }
+.agc-rows { spacing: 16px; padding: 12px 0; }
+.agc-row { spacing: 16px; }
+.agc-empty { color: #b0b0b0; padding: 24px; }

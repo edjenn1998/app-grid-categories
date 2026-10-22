@@ -1,3 +1,6 @@
+<img width="1660" height="1540" alt="Screenshot From 2026-10-22 13-56-55" src="https://github.com/user-attachments/assets/43e8208a-35aa-41a9-be1d-13f0a09bc633" />
+<img width="1920" height="1080" alt="Screenshot From 2026-10-22 13-56-27" src="https://github.com/user-attachments/assets/188add92-7a46-4278-9b35-37e9b2ed57e6" />
+<img width="1920" height="1080" alt="Screenshot From 2026-10-22 13-56-09" src="https://github.com/user-attachments/assets/92fbc0ce-b05d-4f09-a3e3-e465e705b804" />
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # App Grid Categories
 

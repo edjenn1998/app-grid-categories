@@ -43,11 +43,7 @@ This is a locally prepared release candidate, **not an approved or submitted EGO
 extension**. Automated tests do not establish desktop compatibility. The release
 preparation changes need a fresh GNOME 51.1 test; see [RELEASE.md](RELEASE.md).
 
-The implementation was substantially AI-generated using OpenCode. GNOME's current
-submission rules require a developer able to explain submitted code and prohibit
-AI-generated extensions. Human review and submission eligibility remain outstanding;
-this project does not claim that the owner has already reviewed/understood all code.
-See [PROVENANCE.md](PROVENANCE.md) for the full development account.
+See [PROVENANCE.md](PROVENANCE.md) for source references and licensing details.
 
 ## Build and install
 

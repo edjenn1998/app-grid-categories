@@ -1,8 +1,11 @@
-**/dist/
-**/schemas/gschemas.compiled
-**/__pycache__/
 node_modules/
-*.pyc
+__pycache__/
+*.py[cod]
+dist/
+gschemas.compiled
 .env
 .env.*
+!.env.example
+*.log
+.DS_Store
 *~

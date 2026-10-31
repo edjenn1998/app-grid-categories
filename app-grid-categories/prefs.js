@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Generated with AI for personal use.
+// Do NOT upload to extensions.gnome.org (EGO) unless you understand JavaScript
+// and can maintain this code.
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -67,7 +70,8 @@ export default class CategoryPreferences extends ExtensionPreferences {
         appearance.add(orderRow);
         page.add(appearance);
         const group = new Adw.PreferencesGroup({title: 'Categories',
-            description: 'Each app belongs to at most one category. Explicit assignments take priority; the first matching category wins automatic overlaps. All Apps keeps your existing GNOME layout.'});
+            description: 'Each app belongs to at most one category. Explicit assignments take priority; ' +
+                'the first matching category wins automatic overlaps. All Apps keeps your existing GNOME layout.'});
         page.add(group);
         window.add(page);
         const save = () => settings.set_string('categories', serializeConfig(categories));
@@ -214,7 +218,8 @@ export default class CategoryPreferences extends ExtensionPreferences {
             wrap: true, xalign: 0}));
         const search = new Gtk.SearchEntry({placeholder_text: 'Find an installed app…'});
         fields.append(search);
-        fields.append(new Gtk.Label({label: 'Include moves the app here from its previous category.\nAutomatic follows metadata; only the first matching category gets the app.', wrap: true, xalign: 0}));
+        fields.append(new Gtk.Label({label: 'Include moves the app here from its previous category.\n' +
+            'Automatic follows metadata; only the first matching category gets the app.', wrap: true, xalign: 0}));
         content.append(fields);
         const scroll = new Gtk.ScrolledWindow({vexpand: true,
             hscrollbar_policy: Gtk.PolicyType.NEVER});

@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Generated with AI for personal use.
+// Do NOT upload to extensions.gnome.org (EGO) unless you understand JavaScript
+// and can maintain this code.
 // Small GNOME Shell integration patterns adapted; see PROVENANCE.md and NOTICE.
 // Release preparation and lifecycle changes: 2026-10-22.
 import Clutter from 'gi://Clutter';
@@ -15,19 +18,11 @@ import * as ParentalControlsManager from 'resource:///org/gnome/shell/misc/paren
 import {categoryForApp, moveApp, parseConfig, parseFirstSeen, serializeConfig,
     sortApps, updateFirstSeen} from './categories.js';
 
-// St.BoxLayout.vertical was removed in 51; orientation was introduced in 48.
 function box(vertical, params = {}) {
-    const direction = 'orientation' in St.BoxLayout.prototype
-        ? {orientation: vertical ? Clutter.Orientation.VERTICAL : Clutter.Orientation.HORIZONTAL}
-        : {vertical};
-    return new St.BoxLayout({...direction, ...params});
-}
-
-function scrollChild(scroll, child) {
-    if (typeof scroll.set_child === 'function')
-        scroll.set_child(child);
-    else
-        scroll.add_actor(child); // GNOME 45
+    return new St.BoxLayout({
+        orientation: vertical ? Clutter.Orientation.VERTICAL : Clutter.Orientation.HORIZONTAL,
+        ...params,
+    });
 }
 
 export default class AppGridCategories extends Extension {
@@ -41,7 +36,6 @@ export default class AppGridCategories extends Extension {
         this._pendingMove = null;
         this._dropTarget = null;
         this._reloadPending = false;
-        this._disabling = false;
         try {
             this._settings = this.getSettings();
             this._display = Main.overview._overview.controls.appDisplay;
@@ -64,7 +58,7 @@ export default class AppGridCategories extends Extension {
                 vscrollbar_policy: St.PolicyType.AUTOMATIC});
             this._pane.add_child(this._scroll);
             this._rows = box(true, {x_expand: true, style_class: 'agc-rows'});
-            scrollChild(this._scroll, this._rows);
+            this._scroll.set_child(this._rows);
             this._empty = new St.Label({text: 'No apps in this category. Use category settings to add some.',
                 style_class: 'agc-empty', x_align: Clutter.ActorAlign.CENTER});
             this._pane.add_child(this._empty);
@@ -77,7 +71,7 @@ export default class AppGridCategories extends Extension {
                 vscrollbar_policy: St.PolicyType.NEVER});
             this._bar.add_child(tabsScroll);
             const tabsContainer = box(false, {x_expand: true});
-            scrollChild(tabsScroll, tabsContainer);
+            tabsScroll.set_child(tabsContainer);
             this._tabs = box(false, {style_class: 'agc-tabs',
                 x_expand: true, x_align: Clutter.ActorAlign.CENTER});
             tabsContainer.add_child(this._tabs);
@@ -123,6 +117,35 @@ export default class AppGridCategories extends Extension {
             this.disable();
             throw error;
         }
+    }
+
+    disable() {
+        if (this._idle)
+            GLib.source_remove(this._idle);
+        this._idle = 0;
+        for (const [object, id] of this._signals ?? [])
+            object.disconnect(id);
+        this._signals = [];
+        if (this._dragMonitor)
+            DND.removeDragMonitor(this._dragMonitor);
+        this._dragMonitor = null;
+        this._stopOwnedDrags();
+        if (this._selected !== 'all') {
+            for (const [actor, visible] of this._native ?? [])
+                actor.visible = visible;
+        }
+        this._buttons?.clear();
+        this._pane?.destroy();
+        this._bar?.destroy();
+        this._pane = this._bar = this._tabs = this._rows = this._scroll = null;
+        this._heading = this._empty = this._host = this._display = null;
+        this._settings = this._appSystem = this._parental = null;
+        this._usage = this._firstSeen = this._activeDrag = this._pendingMove = null;
+        this._draggables = null;
+        this._externalDrag = this._reloadPending = false;
+        this._dropTarget = null;
+        this._buttons = this._categories = this._native = null;
+        this._lastRendered = null;
     }
 
     _connect(object, signal, callback) {
@@ -186,31 +209,17 @@ export default class AppGridCategories extends Extension {
         const draggable = DND.makeDraggable(icon, {timeoutThreshold: 200,
             dragActorMaxSize: 64, dragActorOpacity: 200});
         const onBegin = () => {
-            if (this._disabling)
-                return;
             this._activeDrag = icon;
             icon.opacity = 120;
         };
         const onEnd = () => {
-            if (this._disabling)
-                return;
             icon.opacity = 255;
             this._activeDrag = null;
             this._setDropTarget(null);
             this._queueRender();
         };
-        let disconnect;
-        if (typeof draggable.connectObject === 'function') {
-            draggable.connectObject('drag-begin', onBegin, 'drag-end', onEnd, icon);
-            disconnect = () => draggable.disconnectObject(icon);
-        } else {
-            const begin = draggable.connect('drag-begin', onBegin);
-            const end = draggable.connect('drag-end', onEnd);
-            disconnect = () => {
-                draggable.disconnect(begin);
-                draggable.disconnect(end);
-            };
-        }
+        draggable.connectObject('drag-begin', onBegin, 'drag-end', onEnd, icon);
+        const disconnect = () => draggable.disconnectObject(icon);
         this._draggables.set(icon, {draggable, disconnect});
         icon.connect('destroy', () => this._draggables?.delete(icon));
     }
@@ -221,14 +230,16 @@ export default class AppGridCategories extends Extension {
             // AppIcon supplies a clone, not the original actor. Shell's DND owns
             // a modal grab, hover source and snap-back transition. Finish those
             // synchronously before destroying our icons, so none survive disable.
-            // These private DND methods were checked against GNOME 45 and main;
+            // These private DND methods were checked against GNOME 51.1;
             // live disable-during-drag testing remains required on GNOME 51.1.
             if (draggable._dragActor) {
                 if (!draggable._animationInProgress)
                     draggable._cancelDrag(global.get_current_time());
                 const clone = draggable._dragActor;
-                clone?.remove_all_transitions();
                 draggable._finishAnimation();
+                // Disconnect Shell's destroy handler before stopping transitions:
+                // onStopped may otherwise destroy the clone during this call.
+                clone?.remove_all_transitions();
                 clone?.destroy();
             }
         }
@@ -293,20 +304,18 @@ export default class AppGridCategories extends Extension {
         }
         this._syncTabStyles();
         if (filtered) {
-            const adjustment = typeof this._scroll.get_vadjustment === 'function'
-                ? this._scroll.get_vadjustment()
-                : this._scroll.get_vscroll_bar().get_adjustment();
+            const adjustment = this._scroll.get_vadjustment();
             adjustment.value = 0;
             this._queueRender();
         }
     }
 
     _queueRender() {
-        if (this._disabling || this._idle || this._activeDrag || this._externalDrag)
+        if (this._idle || this._activeDrag || this._externalDrag)
             return;
         this._idle = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
             this._idle = 0;
-            if (this._disabling || this._activeDrag || this._externalDrag)
+            if (this._activeDrag || this._externalDrag)
                 return GLib.SOURCE_REMOVE;
             if (this._pendingMove) {
                 const {id, destination} = this._pendingMove;
@@ -366,33 +375,4 @@ export default class AppGridCategories extends Extension {
         }
     }
 
-    disable() {
-        this._disabling = true;
-        if (this._idle)
-            GLib.source_remove(this._idle);
-        this._idle = 0;
-        for (const [object, id] of this._signals ?? [])
-            object.disconnect(id);
-        this._signals = [];
-        if (this._dragMonitor)
-            DND.removeDragMonitor(this._dragMonitor);
-        this._dragMonitor = null;
-        this._stopOwnedDrags();
-        if (this._selected !== 'all') {
-            for (const [actor, visible] of this._native ?? [])
-                actor.visible = visible;
-        }
-        this._buttons?.clear();
-        this._pane?.destroy();
-        this._bar?.destroy();
-        this._pane = this._bar = this._tabs = this._rows = this._scroll = null;
-        this._heading = this._empty = this._host = this._display = null;
-        this._settings = this._appSystem = this._parental = null;
-        this._usage = this._firstSeen = this._activeDrag = this._pendingMove = null;
-        this._draggables = null;
-        this._externalDrag = this._reloadPending = false;
-        this._dropTarget = null;
-        this._buttons = this._categories = this._native = null;
-        this._lastRendered = null;
-    }
 }

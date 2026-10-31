@@ -110,7 +110,7 @@ npm run test:package
 python3 -m zipfile -t dist/app-grid-categories@local.edwin.shell-extension.zip
 ```
 
-The submission ZIP contains only runtime files, schema XML/compiled schema, GPL
+The submission ZIP contains only runtime files, schema XML, GPL
 license, and provenance/attribution notices. Tests, Python build/validation tools,
 package files, and development documentation remain in the repository. There are
 no runtime external commands or network access. Desktop checks and current

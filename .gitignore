@@ -1,0 +1,8 @@
+**/dist/
+**/schemas/gschemas.compiled
+**/__pycache__/
+node_modules/
+*.pyc
+.env
+.env.*
+*~

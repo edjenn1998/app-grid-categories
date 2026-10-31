@@ -107,12 +107,13 @@ npm run test:package
 python3 -m zipfile -t dist/app-grid-categories@local.edwin.shell-extension.zip
 ```
 
-The submission ZIP contains only runtime files, schema XML/compiled schema, GPL
+The submission ZIP contains only runtime files, schema XML, GPL
 license, and provenance/attribution notices. Tests, Python build/validation tools,
 package files, and development documentation remain in the repository. There are
 no runtime external commands or network access. Desktop checks and current
 [official review guidance](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
-are recorded in [RELEASE.md](RELEASE.md). Preparing the ZIP does not publish it.
+are recorded in [RELEASE.md](RELEASE.md). GNOME's installer compiles the schema
+on installation. Preparing the ZIP does not publish it.
 
 ## License and attribution
 

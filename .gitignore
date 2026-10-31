@@ -1,0 +1,10 @@
+node_modules/
+__pycache__/
+*.py[cod]
+dist/
+gschemas.compiled
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

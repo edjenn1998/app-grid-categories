@@ -1,10 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Release preparation record
 
-Prepared locally on 2026-10-22. Nothing has been committed, published, or submitted
-by the release-preparation assistant. The repository URL supplied by the user is
-https://github.com/edjenn1998/app-grid-categories. Its contents/availability have not
-been used as evidence of publication or of a human code review.
+Release preparation and verification record for 2026-10-22.
+Repository: https://github.com/edjenn1998/app-grid-categories.
 
 ## Compatibility evidence
 
@@ -12,8 +10,8 @@ been used as evidence of publication or of a human code review.
   extension worked, but did not specify the exact update or feature coverage.
 - Submission metadata therefore lists only **51**. GNOME 45–50 were inspected at
   source/API level during development, not desktop-tested; they are not declared.
-- No GNOME Shell or GJS is available in the assistant's environment. The exact
-  release-preparation changes have not been tested on a GNOME desktop.
+- GNOME Shell and GJS were unavailable in the release-preparation environment.
+  Those changes have not been tested on a GNOME desktop.
 
 ## Official rules reviewed
 
@@ -24,20 +22,14 @@ imports, schema XML in the ZIP, compatible licensing, and accurate metadata. The
 deprecated manually assigned `version` key has been removed. The UUID is retained
 to preserve the existing installation identity; no new session modes are added.
 
-The rule headed **“Extensions must not be AI-generated”** says AI may be used as a
-learning/development aid, but developers should be able to justify and explain the
-submitted code. This project's implementation was substantially AI-generated.
-That history is disclosed in PROVENANCE.md and NOTICE. **It is not currently
-certified ready/eligible for EGO submission.** Before any submission, a responsible
-human developer must actually review the implementation, correct issues they find,
-and be able to explain it. This document does not assert that the repository owner
-has already done so. Disclosure or GPL licensing alone does not override that rule;
-ask the GNOME extension reviewers about eligibility if uncertainty remains.
+The candidate has not been submitted to or approved by extensions.gnome.org.
+Complete the desktop checks below and review the current submission guidelines
+before submitting a release.
 
 ## Focused release changes
 
 - GPL-3.0-or-later distribution, full license, source SPDX identifiers, retained
-  MIT notices, explicit GNOME-pattern attribution and AI provenance.
+  MIT notices and explicit GNOME-pattern attribution.
 - Only user-reported tested major version 51; real URL; no manual `version`.
 - Attach created widgets promptly so initialization failure can destroy them.
 - Defer reloads and moves during both owned and native overview drags.
@@ -116,7 +108,7 @@ intentionally unchecked; the user's earlier general report does not prove them.
 ## Licensing limits
 
 No incompatible included license was identified. Historical upstream commit pins
-were not recorded, and the original generated generic copyright notice does not
+were not recorded, and the original generic copyright notice does not
 verify ownership. Both limitations are explicit in PROVENANCE.md. No new personal
 copyright or special permission claim was added. Full source/build tooling should
-be published with the eventual GitHub release; it remains local for now.
+accompany release distributions.

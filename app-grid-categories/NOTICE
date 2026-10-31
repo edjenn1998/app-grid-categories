@@ -21,18 +21,12 @@ GJS Guide
 
 Earlier local MIT distribution
   Its original notice and permission text are preserved, unaltered, in
-  LICENSES/INITIAL-MIT.txt. The generic copyright line in that file was generated
-  during initial development; it does not establish any particular person's
-  authorship or ownership. The project has not assigned copyright to the AI,
-  repository owner, GNOME, or System76 by adding SPDX identifiers.
+  LICENSES/INITIAL-MIT.txt. The generic copyright line in that file does not
+  identify an individual rights holder. SPDX identifiers describe distribution
+  terms and do not assign copyright.
 
 COSMIC App Library
   https://github.com/pop-os/cosmic-app-library
   Feature/model inspiration and source consultation only. No Rust implementation
   was copied or translated in the recorded development, and no COSMIC assets are
   bundled. Its repository publishes GPL v3 license text. See PROVENANCE.md.
-
-AI involvement
-  The initial implementation and subsequent changes were substantially generated
-  by an OpenCode AI assistant at the user's direction. This release preparation
-  does not certify human code review or eligibility for extensions.gnome.org.

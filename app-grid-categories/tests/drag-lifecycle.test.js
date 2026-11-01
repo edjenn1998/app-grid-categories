@@ -143,16 +143,24 @@ for (const animating of [false, true]) {
         const draggable = h.getDraggable();
         const calls = [];
         draggable._animationInProgress = animating;
-        draggable._dragActor = {remove_all_transitions: () => calls.push('transitions removed'),
+        const clone = {remove_all_transitions: () => {
+            calls.push('transitions removed');
+            // Shell's onStopped destroys the current clone, if still attached.
+            draggable._dragActor?.destroy();
+            draggable._finishAnimation();
+        },
             destroy: () => calls.push('clone destroyed')};
+        draggable._dragActor = clone;
         draggable._cancelDrag = () => { calls.push('cancelled'); };
         draggable._finishAnimation = () => {
+            if (!draggable._dragActor)
+                return;
             calls.push('finished');
             draggable._dragActor = null;
         };
         h.extension.disable();
         assert.deepEqual(calls, [...(animating ? [] : ['cancelled']),
-            'transitions removed', 'finished', 'clone destroyed']);
+            'finished', 'transitions removed', 'clone destroyed']);
         draggable.emit('drag-end');
         assert.equal(h.idle.size, 0);
         assert.equal(h.extension._activeDrag, null);
@@ -160,7 +168,7 @@ for (const animating of [false, true]) {
 }
 
 test('cancelling a drag leaves membership unchanged', () => {
-    const h = harness(false);
+    const h = harness();
     const icon = new h.AppIcon();
     h.extension._makeDraggable(icon);
     h.getDraggable().emit('drag-begin');

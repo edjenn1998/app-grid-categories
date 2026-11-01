@@ -8,3 +8,4 @@ gschemas.compiled
 !.env.example
 *.log
 .DS_Store
+*~

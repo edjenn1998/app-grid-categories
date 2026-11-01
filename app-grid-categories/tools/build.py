@@ -32,7 +32,6 @@ def main():
         with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as archive:
             for name in FILES:
                 archive.write(ROOT / name, name)
-            archive.write(Path(temporary) / 'gschemas.compiled', 'schemas/gschemas.compiled')
     print(target)
 
 

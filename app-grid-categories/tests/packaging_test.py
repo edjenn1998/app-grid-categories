@@ -29,7 +29,6 @@ class SubmissionTests(unittest.TestCase):
             'stylesheet.css', 'LICENSE', 'NOTICE', 'PROVENANCE.md',
             'LICENSES/INITIAL-MIT.txt', 'LICENSES/GJS-GUIDE-MIT.txt',
             'schemas/org.gnome.shell.extensions.app-grid-categories.gschema.xml',
-            'schemas/gschemas.compiled',
         }
         self.assertEqual(set(self.archive.namelist()), expected)
         self.assertEqual(len(self.archive.namelist()), len(expected))
@@ -60,6 +59,7 @@ class SubmissionTests(unittest.TestCase):
     def test_packaged_schema_loads_and_validates_values(self):
         with tempfile.TemporaryDirectory(dir=ROOT / 'dist') as temporary:
             self.archive.extractall(temporary)
+            subprocess.run(['glib-compile-schemas', '--strict', str(Path(temporary) / 'schemas')], check=True)
             base = ['gsettings', '--schemadir', str(Path(temporary) / 'schemas')]
             schema = 'org.gnome.shell.extensions.app-grid-categories'
             env = dict(os.environ, GSETTINGS_BACKEND='memory')

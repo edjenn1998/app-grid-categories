@@ -9,7 +9,7 @@ of related apps. Inspired by COSMIC App Library; an independent project with no
 GNOME or System76 endorsement.
 
 [Source and issue tracker](https://github.com/edjenn1998/app-grid-categories) ·
-[Provenance](PROVENANCE.md) · [Release/testing record](RELEASE.md)
+[Provenance](app-grid-categories/PROVENANCE.md) · [Release/testing record](app-grid-categories/RELEASE.md)
 
 ## Features
 
@@ -39,11 +39,12 @@ specifying the exact update or feature coverage. GNOME 45–50 were inspected at
 source/API level but have not been desktop-tested and are not declared supported.
 New/future releases require testing before being added to metadata.
 
-This is a locally prepared release candidate, **not an approved or submitted EGO
-extension**. Automated tests do not establish desktop compatibility. The release
-preparation changes need a fresh GNOME 51.1 test; see [RELEASE.md](RELEASE.md).
+Version **1.0.1** includes drag-cleanup and packaging maintenance. The maintainer
+reports that the extension works as expected. Automated checks cover the data
+model, drag lifecycle and package contents; see the
+[release/testing record](app-grid-categories/RELEASE.md).
 
-See [PROVENANCE.md](PROVENANCE.md) for source references and licensing details.
+See [PROVENANCE.md](app-grid-categories/PROVENANCE.md) for source references and licensing details.
 
 ## Build and install
 
@@ -51,6 +52,7 @@ Build requires Python 3 and `glib-compile-schemas` (GLib tools). No npm dependen
 are needed. From the repository directory:
 
 ```sh
+cd app-grid-categories
 python3 tools/build.py
 gnome-extensions install --force dist/app-grid-categories@local.edwin.shell-extension.zip
 ```

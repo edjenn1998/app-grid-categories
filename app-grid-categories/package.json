@@ -1,5 +1,6 @@
 {
   "name": "app-grid-categories",
+  "version": "1.0.1",
   "private": true,
   "license": "GPL-3.0-or-later",
   "type": "module",

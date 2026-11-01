@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Generated with AI for personal use.
-// Do NOT upload to extensions.gnome.org (EGO) unless you understand JavaScript
-// and can maintain this code.
 // Small GNOME Shell integration patterns adapted; see PROVENANCE.md and NOTICE.
 // Release preparation and lifecycle changes: 2026-10-22.
 import Clutter from 'gi://Clutter';

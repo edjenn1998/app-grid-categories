@@ -14,6 +14,14 @@ function iconButton(icon, tooltip, callback) {
     return button;
 }
 
+function copyCategory(category) {
+    return {...category,
+        match: [...category.match],
+        include: [...category.include],
+        exclude: [...category.exclude],
+    };
+}
+
 export default class CategoryPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
@@ -90,14 +98,12 @@ export default class CategoryPreferences extends ExtensionPreferences {
                 const up = iconButton('go-up-symbolic', 'Move category left', () => {
                     [categories[index - 1], categories[index]] = [categories[index], categories[index - 1]];
                     save();
-                    refresh();
                 });
                 up.sensitive = index > 0;
                 row.add_suffix(up);
                 const down = iconButton('go-down-symbolic', 'Move category right', () => {
                     [categories[index + 1], categories[index]] = [categories[index], categories[index + 1]];
                     save();
-                    refresh();
                 });
                 down.sensitive = index < categories.length - 1;
                 row.add_suffix(down);
@@ -110,13 +116,11 @@ export default class CategoryPreferences extends ExtensionPreferences {
                         for (const id of updated.include)
                             moveApp(categories, id, updated.id);
                         save();
-                        refresh();
                     });
                 }));
                 row.add_suffix(iconButton('user-trash-symbolic', 'Delete category', () => {
                     categories.splice(index, 1);
                     save();
-                    refresh();
                 }));
                 group.add(row);
                 rows.push(row);
@@ -133,7 +137,6 @@ export default class CategoryPreferences extends ExtensionPreferences {
                 for (const id of updated.include)
                     moveApp(categories, id, updated.id);
                 save();
-                refresh();
             });
         }));
         actions.add(add);
@@ -154,7 +157,6 @@ export default class CategoryPreferences extends ExtensionPreferences {
                 if (response === 'reset') {
                     categories = defaults();
                     save();
-                    refresh();
                 }
             });
             window._categoryResetDialog = dialog;
@@ -162,7 +164,7 @@ export default class CategoryPreferences extends ExtensionPreferences {
         }));
         actions.add(reset);
         page.add(actions);
-        // Keep this list current when a drag-and-drop move is made in Shell.
+        // A single refresh path handles both editor saves and moves made in Shell.
         let changed = settings.connect('changed::categories', () => {
             try {
                 categories = parseConfig(settings.get_string('categories'));
@@ -193,7 +195,7 @@ export default class CategoryPreferences extends ExtensionPreferences {
             parent._categoryEditor.present();
             return;
         }
-        const category = JSON.parse(JSON.stringify(original));
+        const category = copyCategory(original);
         const window = new Adw.Window({title: 'Edit category', transient_for: parent,
             modal: true, destroy_with_parent: true, default_width: 700, default_height: 700});
         const content = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
@@ -230,10 +232,9 @@ export default class CategoryPreferences extends ExtensionPreferences {
         };
         const updateStatus = () => {
             updateTags();
-            const drafts = categories.map(item => JSON.parse(JSON.stringify(
-                item.id === category.id ? category : item)));
+            const drafts = categories.map(item => copyCategory(item.id === category.id ? category : item));
             if (!drafts.some(item => item.id === category.id))
-                drafts.push(JSON.parse(JSON.stringify(category)));
+                drafts.push(copyCategory(category));
             for (const id of category.include)
                 moveApp(drafts, id, category.id);
             for (const {row, info} of entries) {
@@ -275,7 +276,6 @@ export default class CategoryPreferences extends ExtensionPreferences {
         });
         updateStatus();
         window.set_content(content);
-        // Keep a reference for the lifetime of the editor.
         parent._categoryEditor = window;
         window.connect('close-request', () => {
             parent._categoryEditor = null;

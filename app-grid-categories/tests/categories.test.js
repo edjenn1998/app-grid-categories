@@ -98,7 +98,9 @@ test('all sort modes use alphabetical ties and do not mutate their input', () =>
 
 test('configuration rejects malformed, duplicate, reserved IDs and unknown versions', () => {
     assert.throws(() => parseConfig('{'));
+    assert.throws(() => parseConfig('null'), /Unsupported category configuration/);
     assert.throws(() => parseConfig('{"version":2,"categories":[]}'));
+    assert.throws(() => parseConfig('{"version":1,"categories":[null]}'), /Invalid category configuration/);
     const categories = defaults();
     assert.throws(() => serializeConfig([categories[0], categories[0]]));
     assert.throws(() => serializeConfig([{...categories[0], id: 'all'}]));

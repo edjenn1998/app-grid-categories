@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -33,7 +34,7 @@ class SubmissionTests(unittest.TestCase):
         self.assertEqual(set(self.archive.namelist()), expected)
         self.assertEqual(len(self.archive.namelist()), len(expected))
         self.assertIsNone(self.archive.testzip())
-        for name in expected - {'schemas/gschemas.compiled'}:
+        for name in expected:
             self.assertEqual(self.archive.read(name), (ROOT / name).read_bytes())
 
     def test_metadata_matches_reported_testing(self):
@@ -42,6 +43,13 @@ class SubmissionTests(unittest.TestCase):
         self.assertEqual(metadata['shell-version'], ['51'])
         self.assertEqual(metadata['url'], 'https://github.com/edjenn1998/app-grid-categories')
         self.assertEqual(metadata['uuid'], 'app-grid-categories@local.edwin')
+
+    def test_local_documentation_links(self):
+        for document in [ROOT.parent / 'README.md', *ROOT.glob('*.md')]:
+            for target in re.findall(r'\]\(([^)]+)\)', document.read_text()):
+                if not target.startswith(('https://', 'http://', '#')):
+                    path = document.parent / target.split('#')[0]
+                    self.assertTrue(path.exists(), f'{document.name}: missing {target}')
 
     def test_licensing_and_headers(self):
         # Exact unmodified full GPL v3 text, checked against the system copy

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Build an allowlisted submission candidate; never publish or submit it."""
+"""Build the extension ZIP and validate its settings schema."""
 from pathlib import Path
 import json
 import subprocess

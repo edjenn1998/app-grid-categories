@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Small GNOME Shell integration patterns adapted; see PROVENANCE.md and NOTICE.
-// Release preparation and lifecycle changes: 2026-10-22.
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
@@ -132,16 +131,39 @@ export default class AppGridCategories extends Extension {
                 actor.visible = visible;
         }
         this._buttons?.clear();
-        this._pane?.destroy();
-        this._bar?.destroy();
-        this._pane = this._bar = this._tabs = this._rows = this._scroll = null;
-        this._heading = this._empty = this._host = this._display = null;
-        this._settings = this._appSystem = this._parental = null;
-        this._usage = this._firstSeen = this._activeDrag = this._pendingMove = null;
+        if (this._heading)
+            this._heading.destroy();
+        this._heading = null;
+        if (this._empty)
+            this._empty.destroy();
+        this._empty = null;
+        if (this._scroll)
+            this._scroll.destroy();
+        this._scroll = null;
+        this._rows = null;
+        if (this._pane)
+            this._pane.destroy();
+        this._pane = null;
+        if (this._bar)
+            this._bar.destroy();
+        this._bar = null;
+        this._tabs = null;
+        this._host = null;
+        this._display = null;
+        this._settings = null;
+        this._appSystem = null;
+        this._parental = null;
+        this._usage = null;
+        this._firstSeen = null;
+        this._activeDrag = null;
+        this._pendingMove = null;
         this._draggables = null;
-        this._externalDrag = this._reloadPending = false;
+        this._externalDrag = false;
+        this._reloadPending = false;
         this._dropTarget = null;
-        this._buttons = this._categories = this._native = null;
+        this._buttons = null;
+        this._categories = null;
+        this._native = null;
         this._lastRendered = null;
     }
 
@@ -216,19 +238,16 @@ export default class AppGridCategories extends Extension {
             this._queueRender();
         };
         draggable.connectObject('drag-begin', onBegin, 'drag-end', onEnd, icon);
-        const disconnect = () => draggable.disconnectObject(icon);
-        this._draggables.set(icon, {draggable, disconnect});
-        icon.connect('destroy', () => this._draggables?.delete(icon));
+        this._draggables.set(icon, draggable);
+        icon.connectObject('destroy', () => this._draggables.delete(icon), this._pane);
     }
 
     _stopOwnedDrags() {
-        for (const {draggable, disconnect} of this._draggables?.values() ?? []) {
-            disconnect();
+        for (const [icon, draggable] of this._draggables ?? []) {
+            draggable.disconnectObject(icon);
             // AppIcon supplies a clone, not the original actor. Shell's DND owns
             // a modal grab, hover source and snap-back transition. Finish those
             // synchronously before destroying our icons, so none survive disable.
-            // These private DND methods were checked against GNOME 51.1;
-            // live disable-during-drag testing remains required on GNOME 51.1.
             if (draggable._dragActor) {
                 if (!draggable._animationInProgress)
                     draggable._cancelDrag(global.get_current_time());
@@ -271,9 +290,11 @@ export default class AppGridCategories extends Extension {
     _syncTabStyles() {
         const alpha = this._settings.get_int('tab-opacity') / 100;
         for (const [id, button] of this._buttons) {
-            const color = id === this._dropTarget ? '38, 162, 105'
-                : id === this._selected ? '53, 132, 228'
-                : button.hover ? '90, 90, 90' : '64, 64, 64';
+            let color = button.hover ? '90, 90, 90' : '64, 64, 64';
+            if (id === this._dropTarget)
+                color = '38, 162, 105';
+            else if (id === this._selected)
+                color = '53, 132, 228';
             const textColor = id === this._selected && alpha < 0.4 ? '#99c1f1' : '#ffffff';
             // Apply opacity only to the oval, never the label or keyboard focus ring.
             button.set_style(`background-color: rgba(${color}, ${alpha}); ` +
@@ -371,5 +392,4 @@ export default class AppGridCategories extends Extension {
             this._rows.add_child(row);
         }
     }
-
 }

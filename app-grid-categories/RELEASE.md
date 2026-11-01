@@ -1,114 +1,77 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
-# Release preparation record
+# Testing and review notes
 
-Release preparation and verification record for 2026-10-22.
-Repository: https://github.com/edjenn1998/app-grid-categories.
+## 1.0.2 — 2026-11-01
 
-## Compatibility evidence
+- Destroy the heading, empty-state label and scroll view explicitly, then release
+  widget and service references individually during disable.
+- Bind icon-destruction callbacks to the category pane's lifetime and simplify the
+  draggable registry.
+- Use one preferences refresh path for editor saves and external category changes.
+- Copy category fields directly rather than serializing editor state through JSON.
+- Reject null category configurations with a useful configuration error.
+- Build the release ZIP from current source, with schema XML and no compiled schema
+  output. Generated ZIPs are distributed as release assets rather than tracked source files.
 
-- User-reported desktop test: **GNOME Shell 51.1**. The user previously said the
-  extension worked, but did not specify the exact update or feature coverage.
-- Submission metadata therefore lists only **51**. GNOME 45–50 were inspected at
-  source/API level during development, not desktop-tested; they are not declared.
-- GNOME Shell and GJS were unavailable in the release-preparation environment.
-  Those changes have not been tested on a GNOME desktop.
+Verified locally: **23 JavaScript tests** and **5 packaging/documentation tests**
+pass, along with JavaScript syntax, ESLint undefined/unused-variable checks
+(ES2021 parser) and strict schema checks. Shexli reports
+**0 findings, 0 errors and 0 warnings** for the rebuilt ZIP.
 
-## Official rules reviewed
+## Automated checks
 
-[GNOME Shell Extensions Review Guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html),
-accessed 2026-10-22. The current rules require initialization without side effects,
-complete signal/object/source cleanup, readable code, separated Shell/preferences
-imports, schema XML in the ZIP, compatible licensing, and accurate metadata. The
-deprecated manually assigned `version` key has been removed. The UUID is retained
-to preserve the existing installation identity; no new session modes are added.
-
-The candidate has not been submitted to or approved by extensions.gnome.org.
-Complete the desktop checks below and review the current submission guidelines
-before submitting a release.
-
-## Focused release changes
-
-- GPL-3.0-or-later distribution, full license, source SPDX identifiers, retained
-  MIT notices and explicit GNOME-pattern attribution.
-- Only user-reported tested major version 51; real URL; no manual `version`.
-- Attach created widgets promptly so initialization failure can destroy them.
-- Defer reloads and moves during both owned and native overview drags.
-- Track owned draggables; disconnect their callbacks and synchronously finish
-  outstanding clone animations/grabs/hover work on disable. Clear pending moves,
-  idle sources, monitor references, and per-enable state.
-- Parent-owned preferences dialogs/editors; idempotent signal cleanup on close
-  and unrealize; prevent multiple category editors.
-- Allowlisted submission package, excluding README, release notes, tests, tools,
-  package-manager files and repository metadata. License/provenance notices remain.
-
-Normal feature behavior, category spacing/centering, opacity, colors, and the
-absence of an app-grid settings icon are preserved.
-
-## Automated verification
-
-Run from the repository:
+Run from `app-grid-categories/`:
 
 ```sh
 npm test
 npm run check
 npm run build
 npm run test:package
-python3 -m zipfile -t dist/app-grid-categories@local.edwin.shell-extension.zip
+shexli dist/app-grid-categories@local.edwin.shell-extension.zip
 ```
 
-The JavaScript tests use Node for the pure model and substituted Shell services
-for actual extension lifecycle code. They do not exercise Clutter gestures,
-GObject behavior, rendering, or GNOME's real modal grabs. Node syntax checking is
-not a GJS runtime test or a full ESLint audit. Packaging checks verify the exact
-allowlist, metadata, SPDX identifiers, full GPL text, and compiled-schema loading.
+The JavaScript suite covers the category model and the extension's drag/lifecycle
+code with substituted Shell services. It checks ownership, sorting, deferred drops,
+active/snap-back teardown, repeated enable/disable and partial startup failure.
+Packaging tests compare every archived file with its source and check metadata,
+license texts, ZIP integrity and schema compilation/loading.
 
-The build uses the system `glib-compile-schemas`. There are no installed npm
-dependencies, vendored scripts, runtime subprocesses, telemetry, or network calls.
+Native Clutter layout, gestures and modal grabs need the desktop checks below.
+GNOME Shell and GJS are unavailable in the local test environment.
 
-Results for this preparation: **18 JavaScript tests passed**, JavaScript syntax
-and strict schema checks passed, **4 packaging tests passed**, and ZIP integrity
-passed. The packaged GPL text exactly matches `/usr/share/common-licenses/GPL-3`
-(SHA-256 `3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986`).
+## GNOME 51 desktop checks
 
-Candidate artifact:
+Record the package checksum, Shell version, distribution, session type and display
+layout. Desktop use was previously reported on GNOME 51.1; that report did not
+specify coverage of each feature below.
 
-```text
-dist/app-grid-categories@local.edwin.shell-extension.zip
-SHA-256: ca1f426673c33b3242fb450734d302ec02720f7be18f81ee50b85b062b0a67ce
-```
+- [ ] Install/update the exact ZIP; settings persist across logout/login.
+- [ ] Enable/disable with the overview open and closed; check for duplicate bars or errors.
+- [ ] Check tab centering, overflow scrolling, opacity 0/50/100%, scaling and keyboard navigation.
+- [ ] Launch apps and open app menus; parental-control filtering still applies.
+- [ ] Drag from category pages and All Apps to another category, including an empty
+  one. Each app has one owner, and GNOME folders/favorites remain intact.
+- [ ] Cancel with Escape or an invalid drop. Disable during an active drag and during
+  snap-back; check for stuck grabs, ghost icons and journal errors.
+- [ ] Edit, hide or delete the destination while dragging. A pending drop must not
+  recreate it, and category buttons must remain stable until drag cleanup finishes.
+- [ ] Exercise all sort modes, new installs, removals and reinstalls. Moves should
+  not change first-seen timestamps.
+- [ ] Create, edit, reorder, hide and delete categories. Close an editor without
+  saving to discard its changes; Save updates the category list once.
+- [ ] Reset defaults, cancel reset, and close preferences with an editor/dialog open.
+- [ ] Check that All Apps and global search retain their normal behavior.
 
-This checksum identifies the locally validated artifact, not an EGO approval.
-Rebuilding can change ZIP timestamps and therefore the archive checksum; record
-the checksum again if a different build is used for desktop testing.
+Watch for extension errors with `journalctl --user -f -o cat`.
 
-## Outstanding desktop checks on GNOME 51.1
+## Integration and attribution
 
-Record the candidate commit/archive checksum, distro, session type, and test result:
+The extension uses GNOME's private app-grid containers and DND cleanup methods.
+Recheck those interfaces when adding support for a new Shell version. Module
+ownership is straightforward: the extension owns its pane, bar, signal connections,
+idle source and draggable registry; GNOME retains its native grid actors and services.
 
-- [ ] Fresh installation and update from the existing local build; settings persist.
-- [ ] Enable/disable repeatedly with overview open/closed; no duplicate bars/errors.
-- [ ] Category centering, overflow scrolling without a line, opacity 0/50/100%,
-  display scaling, multi-monitor layout, keyboard focus, app menus and launching.
-- [ ] Drag from a category and All Apps to another category, including an empty
-  category; exactly one owner; persistence across logout/login; folders/favorites intact.
-- [ ] Escape/invalid drop; disable or lock/unlock during active drag AND snap-back;
-  verify no stuck pointer, modal grab, ghost icon, hover timer, or journal error.
-- [ ] Change/delete/hide a destination in preferences while dragging; pending drop
-  must not recreate it. Check reload deferral for native All Apps drags as well.
-- [ ] All three sort modes; actual GNOME usage ordering; baseline and newly detected
-  installs/removals/reinstalls; moves do not reset first-seen time.
-- [ ] Create/edit/rename/reorder/hide/delete categories, reset/cancel reset; close the
-  preferences parent with an editor/dialog open; reopen without errors or leaks.
-- [ ] Install/remove apps and change parental restrictions while enabled.
-- [ ] GNOME search and All Apps preserve ordinary grid behavior/layout.
-
-Use `journalctl --user -f -o cat` to watch for extension errors. These boxes are
-intentionally unchecked; the user's earlier general report does not prove them.
-
-## Licensing limits
-
-No incompatible included license was identified. Historical upstream commit pins
-were not recorded, and the original generic copyright notice does not
-verify ownership. Both limitations are explicit in PROVENANCE.md. No new personal
-copyright or special permission claim was added. Full source/build tooling should
-accompany release distributions.
+Source references and license notices are retained in [PROVENANCE.md](PROVENANCE.md)
+and [NOTICE](NOTICE). Review the current
+[GNOME extension guidelines](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
+before submitting an update.

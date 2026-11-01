@@ -17,12 +17,12 @@ export function parseConfig(text) {
     if (!text)
         return defaults();
     const config = JSON.parse(text);
-    if (config.version !== 1 || !Array.isArray(config.categories))
+    if (!config || config.version !== 1 || !Array.isArray(config.categories))
         throw new Error('Unsupported category configuration');
     const ids = new Set();
     const stringList = value => Array.isArray(value) && value.every(s => typeof s === 'string');
     return config.categories.map(category => {
-        if (typeof category.id !== 'string' || !category.id || category.id === 'all' ||
+        if (!category || typeof category.id !== 'string' || !category.id || category.id === 'all' ||
             ids.has(category.id) || typeof category.name !== 'string' || !category.name.trim() ||
             !stringList(category.match) || !stringList(category.include) ||
             !stringList(category.exclude) || typeof category.enabled !== 'boolean')
@@ -92,8 +92,11 @@ export function parseFirstSeen(text) {
 export function updateFirstSeen(previous, ids, now) {
     // Pre-existing apps share a baseline, since their installation dates are
     // unknown. Remove uninstalled IDs so a later reinstall counts as new.
-    return Object.fromEntries(ids.map(id => [id,
-        previous && Object.hasOwn(previous, id) ? previous[id] : previous ? now : 0]));
+    const baseline = previous ? now : 0;
+    return Object.fromEntries(ids.map(id => {
+        const time = previous && Object.hasOwn(previous, id) ? previous[id] : baseline;
+        return [id, time];
+    }));
 }
 
 export function sortApps(apps, mode, firstSeen = {}, compareUsage = () => 0) {

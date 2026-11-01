@@ -1,7 +1,7 @@
 {
   "uuid": "app-grid-categories@local.edwin",
   "name": "App Grid Categories",
-  "version-name": "1.0.1",
+  "version-name": "1.0.2",
   "description": "COSMIC-inspired category tabs in the application grid, with automatic and custom app groups.",
   "shell-version": ["51"],
   "settings-schema": "org.gnome.shell.extensions.app-grid-categories",

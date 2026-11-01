@@ -89,8 +89,9 @@ upstream GPL v3 option and retains the source attribution above.
   code written by Owen Taylor, originally LGPL 2.1, Copyright Red Hat, Inc.
   2006–2008. That runtime-only source is not bundled or relicensed here.
 - `overviewControls.js`, `iconGrid.js`, and St widget headers were read to check
-  container access, icon sizing, orientation, and scrolling APIs. `box()` and
-  `scrollChild()` are newly written compatibility wrappers, not copied widgets.
+   container access, icon sizing, orientation, and scrolling APIs. The `box()`
+   helper constructs St layouts; the former `scrollChild()` compatibility wrapper
+   has been removed.
 - `gi://` imports use the system's GLib/Gio/GTK/libadwaita/Shell/St/Clutter
   libraries. Those implementations, icons returned by apps, and theme resources
   are not redistributed in the submission ZIP. Their licenses are not replaced

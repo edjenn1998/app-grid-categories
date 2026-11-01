@@ -34,15 +34,9 @@ Category pages are alphabetically sorted by default and scroll vertically.
 
 ## Compatibility and status
 
-**GNOME Shell 51 only is declared.** The user reported testing **51.1**, without
-specifying the exact update or feature coverage. GNOME 45–50 were inspected at
-source/API level but have not been desktop-tested and are not declared supported.
-New/future releases require testing before being added to metadata.
-
-Version **1.0.1** includes drag-cleanup and packaging maintenance. The maintainer
-reports that the extension works as expected. Automated checks cover the data
-model, drag lifecycle and package contents; see the
-[release/testing record](app-grid-categories/RELEASE.md).
+Requires **GNOME Shell 51**. Desktop use has been reported on 51.1. Automated checks
+cover category ownership, sorting, drag lifecycle, startup rollback and packaging;
+see the [testing record](app-grid-categories/RELEASE.md) for results and desktop checks.
 
 See [PROVENANCE.md](app-grid-categories/PROVENANCE.md) for source references and licensing details.
 
@@ -62,9 +56,6 @@ Log out and log back in to load the new code, then enable:
 ```sh
 gnome-extensions enable app-grid-categories@local.edwin
 ```
-
-The UUID is retained from local development so updates retain their installation
-identity. Shell 45–50 are intentionally rejected by this candidate's metadata.
 
 Open **Show Applications** to browse categories. Open preferences in Extension
 Manager, or run:
@@ -98,7 +89,8 @@ gnome-extensions uninstall app-grid-categories@local.edwin
 
 ## Development checks and packaging
 
-Node.js is needed for JavaScript tests/checks; Python and GLib tools for packaging:
+From `app-grid-categories/`, run the following checks. JavaScript tests need Node.js;
+packaging needs Python 3 and GLib tools.
 
 ```sh
 npm test
@@ -113,12 +105,14 @@ license, and provenance/attribution notices. Tests, Python build/validation tool
 package files, and development documentation remain in the repository. There are
 no runtime external commands or network access. Desktop checks and current
 [official review guidance](https://gjs.guide/extensions/review-guidelines/review-guidelines.html)
-are recorded in [RELEASE.md](RELEASE.md). Preparing the ZIP does not publish it.
+are recorded in [RELEASE.md](app-grid-categories/RELEASE.md). GNOME's installer
+compiles the schema on installation.
 
 ## License and attribution
 
-Distributed under **GPL-3.0-or-later**; see the complete [LICENSE](LICENSE).
-[NOTICE](NOTICE), [PROVENANCE.md](PROVENANCE.md), and [LICENSES/](LICENSES/) retain
+Distributed under **GPL-3.0-or-later**; see the complete [LICENSE](app-grid-categories/LICENSE).
+[NOTICE](app-grid-categories/NOTICE), [PROVENANCE.md](app-grid-categories/PROVENANCE.md),
+and [LICENSES/](app-grid-categories/LICENSES/) retain
 source attribution and earlier MIT notices. No COSMIC Rust implementation or
 COSMIC assets are bundled. Small GNOME integration patterns were adapted; native
 GNOME classes are imported from the installed Shell at runtime.

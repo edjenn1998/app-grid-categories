@@ -11,46 +11,127 @@ const source = readFileSync(new URL('../extension.js', import.meta.url), 'utf8')
     .replace(/^import[\s\S]*?;\n/gm, '')
     .replace('export default class', 'class');
 
-function harness(modernSignals = true) {
+function harness({fullUI = false} = {}) {
     const idle = new Map();
     let nextId = 1;
     const removedMonitors = [];
     let written = model.serializeConfig(model.defaults());
+    let firstSeen = '';
     let draggable;
-    class AppIcon {
-        constructor() {
+    const actors = [];
+    class Actor {
+        constructor(properties = {}) {
+            Object.assign(this, {visible: true, width: 800}, properties);
             this.signals = new Map();
-            this.app = {get_id: () => 'writer.desktop',
-                get_app_info: () => ({get_categories: () => 'Office;'})};
+            this.children = [];
+            this.ownedConnections = [];
+            actors.push(this);
         }
 
         connect(signal, callback) {
-            this.signals.set(signal, callback);
-            return signal;
+            const id = nextId++;
+            this.signals.set(id, {signal, callback});
+            return id;
+        }
+
+        disconnect(id) { this.signals.delete(id); }
+        emit(signal) {
+            for (const handler of [...this.signals.values()]) {
+                if (handler.signal === signal)
+                    handler.callback();
+            }
+        }
+
+        connectObject(signal, callback, owner) {
+            const id = this.connect(signal, callback);
+            const ownerId = owner.connect('destroy', () => this.disconnect(id));
+            this.ownedConnections.push({id, owner, ownerId});
+        }
+
+        disconnectObject(owner) {
+            for (const connection of this.ownedConnections.filter(item => item.owner === owner)) {
+                this.disconnect(connection.id);
+                owner.disconnect(connection.ownerId);
+            }
+            this.ownedConnections = this.ownedConnections.filter(item => item.owner !== owner);
+        }
+
+        get_children() { return [...this.children]; }
+        add_child(child) { this.children.push(child); child.parent = this; }
+        insert_child_at_index(child, index) { this.children.splice(index, 0, child); child.parent = this; }
+        set_child(child) { this.add_child(child); }
+        get_vadjustment() { return {value: 0}; }
+        set_style(style) { this.style = style; }
+        add_style_pseudo_class() {}
+        remove_style_pseudo_class() {}
+        destroy_all_children() {
+            for (const child of [...this.children])
+                child.destroy();
+        }
+
+        destroy() {
+            assert.equal(this.destroyed, undefined, 'Actor destroyed twice');
+            this.emit('destroy');
+            this.destroy_all_children();
+            for (const {owner} of [...this.ownedConnections])
+                this.disconnectObject(owner);
+            this.signals.clear();
+            if (this.parent)
+                this.parent.children = this.parent.children.filter(child => child !== this);
+            this.destroyed = true;
+        }
+    }
+    class AppIcon extends Actor {
+        constructor() {
+            super();
+            this.app = {get_id: () => 'writer.desktop',
+                get_app_info: () => ({get_categories: () => 'Office;'})};
         }
     }
     const DND = {
         DragMotionResult: {MOVE_DROP: 1, NO_DROP: 0, CONTINUE: 2},
         makeDraggable() {
             const handlers = new Map();
-            draggable = {connect: (signal, callback) => {
-                handlers.set(signal, callback);
-                return signal;
-            }, disconnect: signal => handlers.delete(signal),
-            emit: signal => handlers.get(signal)?.()};
-            if (modernSignals) {
-                draggable.connectObject = (...args) => {
+            draggable = {
+                emit: signal => handlers.get(signal)?.(),
+                connectObject: (...args) => {
                     for (let index = 0; index < args.length - 1; index += 2)
                         handlers.set(args[index], args[index + 1]);
-                };
-                draggable.disconnectObject = () => handlers.clear();
-            }
+                },
+                disconnectObject: () => handlers.clear(),
+            };
             return draggable;
         },
+        addDragMonitor() {},
         removeDragMonitor: monitor => removedMonitors.push(monitor),
     };
+    const settings = Object.assign(new Actor(), {
+        get_string: key => key === 'categories' ? written : firstSeen,
+        get_int: () => 100,
+        set_string: (key, text) => {
+            if (key === 'categories')
+                written = text;
+            else
+                firstSeen = text;
+            settings.emit(`changed::${key}`);
+        },
+    });
+    const parental = Object.assign(new Actor(), {shouldShowApp: () => true});
+    const appSystem = Object.assign(new Actor(), {get_installed: () => []});
+    const usage = {compare: () => 0};
+    const host = new Actor();
+    const native = [new Actor(), new Actor({visible: false})];
+    native.forEach(actor => host.add_child(actor));
+    const overview = Object.assign(new Actor(), {
+        _overview: {controls: {appDisplay: {_box: host, _pageIndicators: native[1]}}},
+    });
+    const St = {BoxLayout: Actor, Label: Actor, Button: Actor, ScrollView: Actor,
+        PolicyType: {NEVER: 0, AUTOMATIC: 1, EXTERNAL: 2}};
     const Extension = vm.runInNewContext(`${source}\nAppGridCategories`, {
-        ...model, AppIcon, DND, Extension: class {},
+        ...model, AppIcon, DND, St, Extension: class { getSettings() { return settings; } },
+        Clutter: {Orientation: {VERTICAL: 1, HORIZONTAL: 0}, ActorAlign: {CENTER: 0}},
+        Main: {overview}, ParentalControlsManager: {getDefault: () => parental},
+        Shell: {AppSystem: {get_default: () => appSystem}, AppUsage: {get_default: () => usage}},
         global: {get_current_time: () => 123},
         GLib: {PRIORITY_DEFAULT_IDLE: 0, SOURCE_REMOVE: false,
             idle_add: (_priority, callback) => {
@@ -60,15 +141,17 @@ function harness(modernSignals = true) {
             }, source_remove: id => idle.delete(id)},
     });
     const extension = new Extension();
-    Object.assign(extension, {
-        _categories: model.defaults(), _selected: 'office', _idle: 0,
-        _signals: [], _native: [], _buttons: new Map(), _draggables: new Map(),
-        _parental: {shouldShowApp: () => true}, _syncTabStyles() {}, _render() {},
-        _settings: {get_string: () => written,
-            set_string: (_key, text) => { written = text; }},
-    });
+    if (!fullUI) {
+        Object.assign(extension, {
+            _categories: model.defaults(), _selected: 'office', _idle: 0,
+            _signals: [], _native: [], _buttons: new Map(), _draggables: new Map(),
+            _parental: parental, _pane: new Actor(), _syncTabStyles() {}, _render() {},
+            _settings: settings,
+        });
+    }
     return {extension, AppIcon, DND, getDraggable: () => draggable,
-        idle, removedMonitors,
+        idle, removedMonitors, actors, native, host, St,
+        emitters: [settings, parental, appSystem, overview],
         flush: () => {
             while (idle.size) {
                 const [id, callback] = idle.entries().next().value;
@@ -79,6 +162,58 @@ function harness(modernSignals = true) {
         configure: categories => { written = model.serializeConfig(categories); },
         saved: () => model.parseConfig(written)};
 }
+
+test('repeated enable/disable destroys owned widgets, disconnects signals and restores native visibility', () => {
+    const h = harness({fullUI: true});
+    for (let cycle = 0; cycle < 3; cycle++) {
+        const start = h.actors.length;
+        h.extension.enable();
+        h.extension._select('office');
+        h.flush();
+        assert.deepEqual(h.native.map(actor => actor.visible), [false, false]);
+        h.extension.disable();
+        assert.deepEqual(h.native.map(actor => actor.visible), [true, false]);
+        assert.deepEqual(h.host.get_children(), h.native);
+        assert.ok(h.actors.slice(start).every(actor => actor.destroyed));
+        assert.ok(h.emitters.every(emitter => emitter.signals.size === 0));
+        assert.equal(h.idle.size, 0);
+        assert.equal(h.extension._settings, null);
+        assert.equal(h.extension._appSystem, null);
+    }
+});
+
+for (const [type, style] of [['Label', 'agc-heading'], ['Label', 'agc-empty'], ['Button', 'agc-tab']]) {
+    test(`failure creating ${style} releases partial startup without destroying native actors`, () => {
+        const h = harness({fullUI: true});
+        const start = h.actors.length;
+        const Widget = h.St[type];
+        h.St[type] = class extends Widget {
+            constructor(properties) {
+                if (properties.style_class === style)
+                    throw new Error('Widget allocation failed');
+                super(properties);
+            }
+        };
+        assert.throws(() => h.extension.enable(), /Widget allocation failed/);
+        assert.ok(h.actors.slice(start).every(actor => actor.destroyed));
+        assert.deepEqual(h.host.get_children(), h.native);
+        assert.ok(h.native.every(actor => !actor.destroyed));
+        assert.ok(h.emitters.every(emitter => emitter.signals.size === 0));
+        assert.equal(h.extension._pane, null);
+        assert.equal(h.extension._settings, null);
+        h.extension.disable();
+    });
+}
+
+test('destroying a rendered icon drops its draggable without leaving an owner signal', () => {
+    const h = harness();
+    const icon = new h.AppIcon();
+    h.extension._makeDraggable(icon);
+    assert.equal(h.extension._draggables.size, 1);
+    icon.destroy();
+    assert.equal(h.extension._draggables.size, 0);
+    assert.equal(h.extension._pane.signals.size, 0);
+});
 
 test('a category drop commits only after drag cleanup and persists one destination', () => {
     const h = harness();
